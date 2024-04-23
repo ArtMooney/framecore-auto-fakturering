@@ -12,19 +12,37 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-export default {
-	// The scheduled handler is invoked at the interval set in our wrangler.toml's
-	// [[triggers]] configuration.
-	async scheduled(event, env, ctx) {
-		// A Cron Trigger can make requests to other endpoints on the Internet,
-		// publish to a Queue, query a D1 Database, and much more.
-		//
-		// We'll keep it simple and make an API call to a Cloudflare API:
-		let resp = await fetch('https://api.cloudflare.com/client/v4/ips');
-		let wasSuccessful = resp.ok ? 'success' : 'fail';
+import { sendEmail } from './sendEmail';
+import { listFolder } from './listFolder';
 
-		// You could store this result in KV, write to a D1 Database, or publish to a Queue.
-		// In this template, we'll just log the result:
-		console.log(`trigger fired at ${event.cron}: ${wasSuccessful}`);
+export default {
+	// async fetch(request, env, ctx) {
+		// const fakturor = 14198495358;
+		// const list = await listFolder.js(env.pcloudToken, fakturor);
+
+		// await sendEmail(
+		// 	env.from,
+		// 	env.to,
+		// 	"Tack för att ni kontaktat FrameCore!",
+		// 	"Meddelande",
+		// 	env.mailgunApiKey
+		// );
+
+	// 	console.log("ok");
+	//
+	// 	return new Response(JSON.stringify("ok", null, 2));
+	// },
+
+	async scheduled(event, env, ctx) {
+	// 	let resp = await fetch('https://api.cloudflare.com/client/v4/ips');
+	// 	let wasSuccessful = resp.ok ? 'success' : 'fail';
+
+		await sendEmail(
+			env.from,
+			env.to,
+			"Tack för att ni kontaktat FrameCore!",
+			"Meddelande",
+			env.mailgunApiKey
+		);
 	},
 };
