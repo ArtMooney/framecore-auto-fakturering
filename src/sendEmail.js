@@ -1,23 +1,21 @@
-export async function sendEmail(from, to, subject, message, apiKey) {
+export async function sendEmail(apiKey, fromEmail, toEmails, subject, message, binaryFile, fileName) {
 	let headersList = {
-		Accept: "*/*",
-		Authorization: "Basic " + btoa("api" + ":" + apiKey),
+		Accept: '*/*',
+		Authorization: 'Basic ' + btoa('api' + ':' + apiKey),
 	};
 
 	let bodyContent = new FormData();
-	bodyContent.append("from", from);
-	bodyContent.append("to", to);
-	bodyContent.append("subject", subject);
-	bodyContent.append("text", message);
+	bodyContent.append('from', fromEmail);
+	bodyContent.append('to', toEmails);
+	bodyContent.append('subject', subject);
+	bodyContent.append('html', message);
+	bodyContent.append('attachment', binaryFile, fileName);
 
-	let response = await fetch(
-		"https://api.eu.mailgun.net/v3/mg.framecore.se/messages",
-		{
-			method: "POST",
-			body: bodyContent,
-			headers: headersList,
-		},
-	);
+	let response = await fetch('https://api.eu.mailgun.net/v3/mg.framecore.se/messages', {
+		method: 'POST',
+		body: bodyContent,
+		headers: headersList,
+	});
 
 	return await response.text();
 }
