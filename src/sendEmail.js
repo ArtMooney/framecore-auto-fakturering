@@ -9,7 +9,10 @@ export async function sendEmail(apiKey, fromEmail, toEmails, subject, message, b
 	bodyContent.append('to', toEmails);
 	bodyContent.append('subject', subject);
 	bodyContent.append('html', message);
-	bodyContent.append('attachment', binaryFile, fileName);
+
+	if (binaryFile && fileName) {
+		bodyContent.append('attachment', binaryFile, fileName);
+	}
 
 	let response = await fetch('https://api.eu.mailgun.net/v3/mg.framecore.se/messages', {
 		method: 'POST',

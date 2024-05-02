@@ -17,7 +17,9 @@ export default {
 		const invoicesFolder = env.invoicesFolder;
 		const list = await listFolder(env.pcloudToken, invoices);
 
-		if (!list.length) return new Response(JSON.stringify('Inga fakturor', null, 2));
+		if (!list.length) {
+			await sendEmail(env.mailgunApiKey, env.fromEmail, env.devEmail, 'Fakturor fattas', 'Skapa fler fakturor till Kinna Husvagnsservice');
+		}
 
 		const invoice = await getLowestInvoiceNumber(list);
 		const invoiceFileLink = await getFileLink(env.pcloudToken, invoice);
