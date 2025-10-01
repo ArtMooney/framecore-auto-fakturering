@@ -1,42 +1,29 @@
-import { sendEmail } from './sendEmail';
-import { listFolder } from './listFolder';
-import { getLowestInvoiceNumber } from './getLowestInvoiceNumber';
-import { getFileLink } from './getFileLink';
-import { getFileBinary } from './getFileBinary';
-import { uploadFile } from './uploadFile';
-import { deleteFile } from './deleteFile';
-import { getEmailSignature } from './getEmailSignature';
+import { corsHeaders, handleCors } from './cors.js';
+import { runApp } from './runApp';
 
 export default {
-	async scheduled(event, env, ctx) {
-		// async fetch(request, env, ctx) {
-		// 	let resp = await fetch('https://api.cloudflare.com/client/v4/ips');
-		// 	let wasSuccessful = resp.ok ? 'success' : 'fail';
+	async fetch(request, env, ctx) {
+		const corsResponse = await handleCors(request, env);
+		if (corsResponse) return corsResponse;
 
-		const invoices = env.invoices;
-		const invoicesFolder = env.invoicesFolder;
-		const list = await listFolder(env.pcloudToken, invoices);
+		const url = new URL(request.url);
 
-		if (!list.length) {
-			await sendEmail(env.mailgunApiKey, env.fromEmail, env.devEmail, 'Fakturor fattas', 'Skapa fler fakturor till Kinna Husvagnsservice');
+		if (request.method === 'GET') {
+			const params = new URLSearchParams(decodeURIComponent(url.search));
+
+			switch (url.pathname) {
+				case '/':
+					return new Response(JSON.stringify(await runApp(env), null, 2), { headers: corsHeaders });
+			}
 		}
+	},
 
-		const invoice = await getLowestInvoiceNumber(list);
-		const invoiceFileLink = await getFileLink(env.pcloudToken, invoice);
-		const invoiceFileBinary = await getFileBinary(env.pcloudToken, invoiceFileLink);
-		const fileUploaded = await uploadFile(env.pcloudToken, invoice, invoiceFileBinary, invoicesFolder);
-		const deleteOldInvoice = await deleteFile(env.pcloudToken, invoice.fileid);
+	async scheduled(event, env, ctx) {
+		switch (event.cron) {
+			case '0 7 1 * *':
+				await runApp(env);
 
-		await sendEmail(
-			env.mailgunApiKey,
-			env.fromEmail,
-			env.toEmails, // !!! other email(s) on production
-			'Faktura webbhotell',
-			await getEmailSignature(),
-			invoiceFileBinary,
-			invoice.name,
-		);
-
-		return new Response(JSON.stringify('ok', null, 2));
+				break;
+		}
 	},
 };
