@@ -26,7 +26,6 @@ export async function runApp(env) {
 	const invoiceFileLink = await getFileLink(env.PCLOUD_TOKEN, invoice);
 	const invoiceFileBinary = await getFileBinary(env.PCLOUD_TOKEN, invoiceFileLink);
 	const fileUploaded = await uploadFile(env.PCLOUD_TOKEN, invoice, invoiceFileBinary, invoicesFolder);
-	const deleteOldInvoice = await deleteFile(env.PCLOUD_TOKEN, invoice.fileid);
 
 	await sendEmail(
 		env.MAILGUN_API_KEY,
@@ -37,6 +36,12 @@ export async function runApp(env) {
 		invoiceFileBinary,
 		invoice.name,
 	);
+
+	if (fileUploaded && fileUploaded.metadata && fileUploaded.metadata[0]) {
+		await deleteFile(env.PCLOUD_TOKEN, invoice.fileid);
+	} else {
+		throw new Error('File upload failed');
+	}
 
 	return 'Ok';
 }

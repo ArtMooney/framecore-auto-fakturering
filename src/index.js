@@ -22,7 +22,6 @@ export default {
 		switch (event.cron) {
 			case '0 7 1 * *':
 				await runApp(env);
-
 				break;
 		}
 	},
