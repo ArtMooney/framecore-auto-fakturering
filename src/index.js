@@ -8,14 +8,14 @@ export default {
 
 		const url = new URL(request.url);
 
-		if (request.method === 'GET') {
-			const params = new URLSearchParams(decodeURIComponent(url.search));
-
-			switch (url.pathname) {
-				case '/':
-					return new Response(JSON.stringify(await runApp(env), null, 2), { headers: corsHeaders });
-			}
+		if (request.method === 'GET' && url.pathname === '/') {
+			const result = await runApp(env);
+			return new Response(JSON.stringify(result, null, 2), {
+				headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+			});
 		}
+
+		return new Response('Not found', { status: 404, headers: corsHeaders });
 	},
 
 	async scheduled(event, env, ctx) {

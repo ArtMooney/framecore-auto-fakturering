@@ -11,8 +11,9 @@ export async function runApp(env) {
 	const invoices = env.INVOICES_ID;
 	const invoicesFolder = env.INVOICES_FOLDER_ID;
 	const list = await listFolder(env.PCLOUD_TOKEN, invoices);
+	const files = list.filter((item) => !item.isfolder);
 
-	if (!list.length) {
+	if (!files.length) {
 		await sendEmail(
 			env.MAILGUN_API_KEY,
 			env.EMAIL_FROM,
@@ -20,12 +21,23 @@ export async function runApp(env) {
 			'Fakturor fattas',
 			'Skapa fler fakturor till Kinna Husvagnsservice',
 		);
+
+		return 'Inga fakturor kvar';
 	}
 
-	const invoice = await getLowestInvoiceNumber(list);
+	const invoice = getLowestInvoiceNumber(files);
+
+	if (!invoice) {
+		throw new Error('Kunde inte hitta en giltig faktura');
+	}
+
 	const invoiceFileLink = await getFileLink(env.PCLOUD_TOKEN, invoice);
 	const invoiceFileBinary = await getFileBinary(env.PCLOUD_TOKEN, invoiceFileLink);
 	const fileUploaded = await uploadFile(env.PCLOUD_TOKEN, invoice, invoiceFileBinary, invoicesFolder);
+
+	if (!fileUploaded || !fileUploaded.metadata || !fileUploaded.metadata[0]) {
+		throw new Error('File upload failed');
+	}
 
 	await sendEmail(
 		env.MAILGUN_API_KEY,
@@ -37,11 +49,7 @@ export async function runApp(env) {
 		invoice.name,
 	);
 
-	if (fileUploaded && fileUploaded.metadata && fileUploaded.metadata[0]) {
-		await deleteFile(env.PCLOUD_TOKEN, invoice.fileid);
-	} else {
-		throw new Error('File upload failed');
-	}
+	await deleteFile(env.PCLOUD_TOKEN, invoice.fileid);
 
 	return 'Ok';
 }

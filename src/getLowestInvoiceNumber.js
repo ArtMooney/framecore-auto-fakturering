@@ -1,18 +1,15 @@
-export async function getLowestInvoiceNumber(items) {
-	const fileNumbers = [];
-	const newItems = [];
+export function getLowestInvoiceNumber(files) {
+	let lowestInvoice = null;
+	let lowestNumber = Infinity;
 
-	for (const item of items) {
-		fileNumbers.push(item.name.split(' ')[0]);
-	}
+	for (const invoice of files) {
+		const num = parseInt(invoice.name.split(' ')[0], 10);
 
-	const minFileNumber = Math.ceil(Math.min(...fileNumbers));
-
-	for (const item of items) {
-		if (parseInt(item.name.split(' ')[0]) === minFileNumber) {
-			newItems.push(item);
+		if (!isNaN(num) && num < lowestNumber) {
+			lowestNumber = num;
+			lowestInvoice = invoice;
 		}
 	}
-	
-	return newItems[0];
+
+	return lowestInvoice;
 }
